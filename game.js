@@ -41,12 +41,15 @@ const quests = [
   {id:'herbs',icon:'❋',name:'Ervas para a curandeira',desc:'Reúna plantas da floresta',reward:80,points:1},
   {id:'beacon',icon:'♨',name:'Acenda o antigo farol',desc:'Ajude a vila de Brumafria',reward:120,points:2}
 ];
-const initialState = {xp:0,points:2,unlocked:[],equipped:[],completed:[],path:'guerreiro'};
+const initialState = {xp:0,points:2,research:0,unlocked:[],equipped:[],completed:[],studied:[],customSkills:[],path:'guerreiro'};
 let state;
 try { state = {...initialState,...JSON.parse(localStorage.getItem('arvandor-save')||'{}')}; } catch { state = {...initialState}; }
 state.unlocked = Array.isArray(state.unlocked)?state.unlocked:[];
 state.equipped = Array.isArray(state.equipped)?state.equipped:[];
 state.completed = Array.isArray(state.completed)?state.completed:[];
+state.studied = Array.isArray(state.studied)?state.studied:[];
+state.customSkills = Array.isArray(state.customSkills)?state.customSkills:[];
+state.research = Math.max(0,Number(state.research)||0);
 state.points = Math.max(0,Number(state.points)||0);
 let selectedSkill = null;
 let zoom = 1;
@@ -58,12 +61,61 @@ function renderHeader(){const d=levelData();$('levelBadge').textContent=`NV. ${d
 function renderPaths(){ $('pathList').innerHTML=Object.entries(paths).map(([id,path])=>{const earned=path.skills.filter(s=>state.unlocked.includes(s.id)).length;return `<button class="path-card ${state.path===id?'active':''}" data-path="${id}"><span class="path-icon">${path.icon}</span><span class="path-copy"><b>${path.name}</b><small>${path.tone}</small></span><span class="path-count">${earned}/7</span></button>`;}).join('');document.querySelectorAll('.path-card').forEach(button=>button.addEventListener('click',()=>{state.path=button.dataset.path;selectedSkill=null;save();render();}));}
 function renderTree(){const path=paths[state.path];$('treeTitle').textContent=path.title;const skills=path.skills;const byId=Object.fromEntries(skills.map(s=>[s.id,s]));$('connections').innerHTML=skills.filter(s=>s.req).map(s=>{const p=byId[s.req],active=state.unlocked.includes(s.id)&&state.unlocked.includes(s.req);return `<path class="link ${active?'active':''}" d="M ${p.x} ${p.y+22} C ${p.x} ${p.y+75}, ${s.x} ${s.y-75}, ${s.x} ${s.y-23}"/>`;}).join('');$('nodesLayer').innerHTML=skills.map(s=>{const unlocked=state.unlocked.includes(s.id),available=!unlocked&&(!s.req||state.unlocked.includes(s.req)),selected=selectedSkill===s.id,cls=unlocked?'unlocked':available?'available':'locked';return `<button class="skill-node ${cls} ${selected?'selected':''}" style="left:${s.x}px;top:${s.y}px" data-skill="${s.id}" aria-label="${s.name}${unlocked?', desbloqueada':available?', disponível':', bloqueada'}"><span class="node-orbit"><span class="node-icon">${s.icon}</span>${!available&&!unlocked?'<span class="node-lock">⌑</span>':''}</span><span class="node-name">${s.name}</span><span class="node-cost">${unlocked?'DESBLOQUEADA':`${s.cost} ${s.cost===1?'PONTO':'PONTOS'}`}</span></button>`;}).join('');document.querySelectorAll('.skill-node').forEach(button=>button.addEventListener('click',()=>{selectedSkill=button.dataset.skill;renderTree();renderDetail();}));}
 function renderDetail(){const skill=paths[state.path].skills.find(s=>s.id===selectedSkill);if(!skill){$('detailEmpty').classList.remove('hidden');$('skillDetail').classList.add('hidden');return;}$('detailEmpty').classList.add('hidden');$('skillDetail').classList.remove('hidden');const unlocked=state.unlocked.includes(skill.id),available=!skill.req||state.unlocked.includes(skill.req),equipped=state.equipped.includes(skill.id),reqSkill=paths[state.path].skills.find(s=>s.id===skill.req);let button='';if(!unlocked)button=`<button class="primary-button" id="unlockSkill" ${(!available||state.points<skill.cost)?'disabled':''}>${!available?`Requer: ${reqSkill?.name||'habilidade anterior'}`:state.points<skill.cost?'Pontos insuficientes':`✧ Desbloquear · ${skill.cost} ${skill.cost===1?'ponto':'pontos'}`}</button>`;else button=`<button class="primary-button ${equipped?'equip-button':''}" id="equipSkill">${equipped?'✓ Equipado — remover do arsenal':'＋ Equipar habilidade'}</button>`;$('skillDetail').innerHTML=`<div class="detail-top"><div class="detail-icon">${skill.icon}</div><div class="detail-title"><h3>${skill.name}</h3><span>${paths[state.path].name} · ${skill.root?'Fundamento':skill.cost===2?'Lendária':'Técnica'}</span></div></div><p class="detail-desc">${skill.desc}</p><div class="detail-stats">${skill.stats.map(s=>`<span class="stat-pill">${s}</span>`).join('')}</div>${!available?`<p class="requirement">✧ Desbloqueie <b>${reqSkill?.name}</b> primeiro.</p>`:''}${button}`;const unlock=$('unlockSkill');if(unlock)unlock.addEventListener('click',()=>{if(!available||state.points<skill.cost)return;state.points-=skill.cost;state.unlocked.push(skill.id);selectedSkill=skill.id;save();render();showToast(`${skill.name} desbloqueada!`);});const equip=$('equipSkill');if(equip)equip.addEventListener('click',()=>{if(equipped)state.equipped=state.equipped.filter(id=>id!==skill.id);else if(state.equipped.length<3)state.equipped.push(skill.id);else{showToast('Seu arsenal está cheio. Remova uma habilidade antes.');return;}save();render();});}
-function renderLoadout(){const slots=Array.from({length:3},(_,i)=>{const id=state.equipped[i],skill=id?Object.values(paths).flatMap(p=>p.skills).find(s=>s.id===id):null;return `<div class="loadout-slot ${skill?'filled':''}">${skill?`<span class="slot-icon">${skill.icon}</span><span>${skill.name}</span><button class="remove-skill" data-remove="${skill.id}" aria-label="Remover ${skill.name}">×</button>`:`<span class="slot-icon slot-empty">＋</span><span>Espaço disponível</span>`}</div>`;}).join('');$('loadout').innerHTML=slots;$('loadoutCount').textContent=`${state.equipped.length} / 3`;document.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{state.equipped=state.equipped.filter(id=>id!==b.dataset.remove);save();render();}));}
-function renderQuests(){$('questGrid').innerHTML=quests.map(q=>{const done=state.completed.includes(q.id);return `<article class="quest-card ${done?'completed':''}"><div class="quest-icon">${done?'✓':q.icon}</div><div class="quest-copy"><b>${q.name}</b><small>${done?'Missão concluída':q.desc}</small><div class="quest-reward">✧ ${q.reward} XP &nbsp;·&nbsp; +${q.points} ${q.points===1?'ponto':'pontos'}</div></div><button class="quest-button ${done?'done':''}" data-quest="${q.id}" ${done?'disabled':''}>${done?'Concluída':'Completar'}</button></article>`;}).join('');document.querySelectorAll('[data-quest]').forEach(b=>b.addEventListener('click',()=>{const q=quests.find(q=>q.id===b.dataset.quest);if(!q||state.completed.includes(q.id))return;const old=levelData().level;state.completed.push(q.id);state.xp+=q.reward;state.points+=q.points;save();render();const gained=levelData().level-old;showToast(`Missão concluída! +${q.reward} XP e +${q.points} ${q.points===1?'ponto':'pontos'}${gained?` · nível ${levelData().level}!`:''}`);}));}
-function render(){renderHeader();renderPaths();renderTree();renderDetail();renderLoadout();renderQuests();}
+function renderLoadout(){const allSkills=[...Object.values(paths).flatMap(p=>p.skills),...state.customSkills];const slots=Array.from({length:3},(_,i)=>{const id=state.equipped[i],skill=id?allSkills.find(s=>s.id===id):null;return `<div class="loadout-slot ${skill?'filled':''}">${skill?`<span class="slot-icon">${skill.icon}</span><span>${skill.name}</span><button class="remove-skill" data-remove="${skill.id}" aria-label="Remover ${skill.name}">×</button>`:`<span class="slot-icon slot-empty">＋</span><span>Espaço disponível</span>`}</div>`;}).join('');$('loadout').innerHTML=slots;$('loadoutCount').textContent=`${state.equipped.length} / 3`;document.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{state.equipped=state.equipped.filter(id=>id!==b.dataset.remove);save();render();}));}
+function renderQuests(){$('questGrid').innerHTML=quests.map(q=>{const done=state.completed.includes(q.id);return `<article class="quest-card ${done?'completed':''}"><div class="quest-icon">${done?'✓':q.icon}</div><div class="quest-copy"><b>${q.name}</b><small>${done?'Missão concluída':q.desc}</small><div class="quest-reward">✧ ${q.reward} XP &nbsp;·&nbsp; +${q.points} ${q.points===1?'ponto':'pontos'} &nbsp;·&nbsp; +1 pesquisa</div></div><button class="quest-button ${done?'done':''}" data-quest="${q.id}" ${done?'disabled':''}>${done?'Concluída':'Completar'}</button></article>`;}).join('');document.querySelectorAll('[data-quest]').forEach(b=>b.addEventListener('click',()=>{const q=quests.find(q=>q.id===b.dataset.quest);if(!q||state.completed.includes(q.id))return;const old=levelData().level;state.completed.push(q.id);state.xp+=q.reward;state.points+=q.points;state.research+=1;save();render();const gained=levelData().level-old;showToast(`Missão concluída! +${q.reward} XP, +${q.points} ${q.points===1?'ponto':'pontos'} e +1 pesquisa${gained?` · nível ${levelData().level}!`:''}`);}));}
+const studies = [
+  {id:'runes',name:'Símbolos ancestrais',desc:'Decifre inscrições e registre um novo método de pesquisa.',missions:1},
+  {id:'elements',name:'Afinidade dos elementos',desc:'Compare tradições mágicas e descubra pontos de convergência.',missions:2},
+  {id:'essence',name:'Essência viva',desc:'Estude a ligação entre instinto, vigor e energia arcana.',missions:3}
+];
+function availableSkills(){return [...Object.values(paths).flatMap(path=>path.skills.filter(skill=>state.unlocked.includes(skill.id))),...state.customSkills];}
+function escapeHTML(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function renderWorkshop(){
+  $('researchCount').textContent=state.research;
+  const completedMissions=state.completed.length;
+  $('studyGrid').innerHTML=studies.map(study=>{
+    const done=state.studied.includes(study.id),available=completedMissions>=study.missions;
+    return `<article class="study-card ${done?'studied':''} ${!available&&!done?'unavailable':''}"><div class="study-icon">${done?'✓':'⌕'}</div><div class="study-copy"><b>${study.name}</b><small>${done?'Pesquisa concluída':study.desc}</small><span>${available?'Recompensa: +1 pesquisa':`Requer ${study.missions} ${study.missions===1?'missão concluída':'missões concluídas'}`}</span></div><button class="study-button" data-study="${study.id}" ${done||!available?'disabled':''}>${done?'Estudado':'Estudar'}</button></article>`;
+  }).join('');
+  document.querySelectorAll('[data-study]').forEach(button=>button.addEventListener('click',()=>{
+    const study=studies.find(item=>item.id===button.dataset.study);
+    if(!study||state.studied.includes(study.id)||state.completed.length<study.missions)return;
+    state.studied.push(study.id);state.research+=1;save();render();showToast(`Estudo concluído: ${study.name} · +1 pesquisa`);
+  }));
+  const skills=availableSkills();
+  if(skills.length<2){
+    $('craftControls').innerHTML='<p class="craft-empty">Desbloqueie ao menos duas habilidades para começar uma combinação.</p>';
+  }else{
+    const options=skills.map(skill=>`<option value="${escapeHTML(skill.id)}">${escapeHTML(skill.name)}</option>`).join('');
+    $('craftControls').innerHTML=`<label>Primeira habilidade<select id="craftFirst">${options}</select></label><span class="craft-plus">＋</span><label>Segunda habilidade<select id="craftSecond">${options}</select></label><button class="primary-button craft-button" id="craftSkill" ${state.research<2?'disabled':''}>✧ Criar · 2 pesquisas</button>`;
+    $('craftSecond').selectedIndex=1;
+    $('craftSkill').addEventListener('click',()=>{
+      const first=skills.find(skill=>skill.id===$('craftFirst').value),second=skills.find(skill=>skill.id===$('craftSecond').value);
+      if(!first||!second||first.id===second.id){showToast('Escolha duas habilidades diferentes.');return;}
+      const ingredients=[first.id,second.id].sort(),recipeKey=ingredients.join('|');
+      if(state.customSkills.some(skill=>skill.recipeKey===recipeKey)){showToast('Essa combinação já foi pesquisada.');return;}
+      if(state.research<2){showToast('Você precisa de 2 pontos de pesquisa.');return;}
+      const created={id:`craft_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`,name:`Ressonância: ${first.name} + ${second.name}`,icon:'✧',desc:`Uma técnica original descoberta ao combinar ${first.name} e ${second.name}. Conhecimentos de vocações distintas se encontram em um novo estilo.`,stats:[first.stats[0],second.stats[0]],effect:`Combina os efeitos de ${first.name} e ${second.name}.`,recipeKey,ingredients};
+      state.research-=2;state.customSkills.push(created);save();render();showToast('Nova habilidade criada e adicionada ao seu arsenal!');
+    });
+  }
+  $('creationCount').textContent=state.customSkills.length;
+  $('creationList').innerHTML=state.customSkills.length?state.customSkills.map(skill=>{
+    const equipped=state.equipped.includes(skill.id);
+    return `<article class="creation-card"><span class="creation-icon">${escapeHTML(skill.icon||'✧')}</span><div class="creation-copy"><b>${escapeHTML(skill.name)}</b><small>${escapeHTML(skill.desc)}</small><span>${(Array.isArray(skill.stats)?skill.stats:[]).map(escapeHTML).join(' · ')}</span></div><button class="creation-equip ${equipped?'equipped':''}" data-creation-equip="${escapeHTML(skill.id)}">${equipped?'✓ Equipada':'＋ Equipar'}</button></article>`;
+  }).join(''):'<p class="creation-empty">Suas descobertas aparecerão aqui. Combine habilidades dominadas para criar algo inédito.</p>';
+  document.querySelectorAll('[data-creation-equip]').forEach(button=>button.addEventListener('click',()=>{
+    const id=button.dataset.creationEquip;
+    if(state.equipped.includes(id))state.equipped=state.equipped.filter(item=>item!==id);
+    else if(state.equipped.length<3)state.equipped.push(id);
+    else{showToast('Seu arsenal está cheio. Remova uma habilidade antes de equipar outra.');return;}
+    save();render();
+  }));
+}
+function render(){renderHeader();renderPaths();renderTree();renderDetail();renderLoadout();renderQuests();renderWorkshop();}
 function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
 $('zoomIn').addEventListener('click',()=>setZoom(Math.min(1.2,zoom+.1)));$('zoomOut').addEventListener('click',()=>setZoom(Math.max(.7,zoom-.1)));
 function setZoom(value){zoom=value;$('zoomLabel').textContent=`${Math.round(zoom*100)}%`;const world=$('treeWorld');world.style.setProperty('--zoom',zoom);world.classList.toggle('zoomed',window.innerWidth<700);if(window.innerWidth>=700){world.style.transform=`scale(${zoom})`;world.style.transformOrigin='top left';world.style.marginLeft='auto';}$('treeViewport').style.height=`${Math.max(390,465*zoom)}px`;}
-$('resetButton').addEventListener('click',()=>{if(!confirm('Recomeçar a jornada? Todo o progresso, habilidades e missões serão reiniciados.'))return;state={...initialState,unlocked:[],equipped:[],completed:[]};selectedSkill=null;save();render();showToast('Uma nova lenda começa agora.');});
+$('resetButton').addEventListener('click',()=>{if(!confirm('Recomeçar a jornada? Todo o progresso, habilidades e missões serão reiniciados.'))return;state={...initialState,unlocked:[],equipped:[],completed:[],studied:[],customSkills:[]};selectedSkill=null;save();render();showToast('Uma nova lenda começa agora.');});
 const help=$('helpDialog');$('helpButton').addEventListener('click',()=>help.showModal());$('closeHelp').addEventListener('click',()=>help.close());$('gotIt').addEventListener('click',()=>help.close());$('profileButton').addEventListener('click',()=>showToast('Você é quem escreve esta lenda.'));
 render();

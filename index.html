@@ -65,7 +65,7 @@
           <div class="divider"></div>
           <div class="loadout-heading"><div><div class="panel-kicker">HABILIDADES EQUIPADAS</div><h3>Seu arsenal</h3></div><span id="loadoutCount">0 / 3</span></div>
           <div class="loadout" id="loadout"></div>
-          <div class="quick-tip"><span>☼</span><p><b>Dica do mestre</b>Complete missões para ganhar XP e pontos de habilidade.</p></div>
+          <div class="quick-tip"><span>☼</span><p><b>Dica do mestre</b>Missões também rendem pesquisa para sua oficina de criação.</p></div>
         </aside>
       </div>
 
@@ -73,11 +73,24 @@
         <div class="quests-title"><div><div class="panel-kicker">TAREFAS DO AVENTUREIRO</div><h2>Missões da jornada</h2></div><span class="quest-note">Complete desafios para evoluir <span>✧</span></span></div>
         <div class="quest-grid" id="questGrid"></div>
       </section>
+
+      <section class="workshop-section panel" aria-labelledby="workshopTitle">
+        <div class="workshop-heading">
+          <div><div class="panel-kicker">OFICINA DE CONHECIMENTO</div><h2 id="workshopTitle">Crie novas habilidades</h2><p>Estude os registros antigos, reúna pesquisa e combine duas habilidades que você já domina.</p></div>
+          <div class="research-counter"><span>✧</span><div><b id="researchCount">0</b><small>PONTOS DE PESQUISA</small></div></div>
+        </div>
+        <div class="study-area"><h3>Estudos disponíveis</h3><div class="study-grid" id="studyGrid"></div></div>
+        <div class="craft-area">
+          <div class="craft-copy"><h3>Combinar conhecimentos</h3><p>Uma criação exige duas habilidades diferentes e 2 pontos de pesquisa. O conhecimento original não é consumido.</p></div>
+          <div class="craft-controls" id="craftControls"></div>
+        </div>
+        <div class="creations-area"><div class="creations-heading"><h3>Habilidades criadas</h3><span id="creationCount">0</span></div><div class="creation-list" id="creationList"></div></div>
+      </section>
       <footer class="footer"><span>✦</span> AS LENDAS DE ARVANDOR <i>•</i> SEU CAMINHO, SUAS REGRAS</footer>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <dialog id="helpDialog"><div class="dialog-inner"><button class="dialog-close" id="closeHelp" aria-label="Fechar">×</button><div class="eyebrow">✧ GUIA DO AVENTUREIRO</div><h2>Como trilhar seu caminho</h2><ol><li><b>Escolha uma vocação</b> para explorar sua árvore de habilidades.</li><li><b>Complete missões</b> para ganhar experiência e pontos de habilidade.</li><li><b>Desbloqueie habilidades</b> seguindo as conexões e os requisitos da trilha.</li><li><b>Equipe até 3 poderes</b> no seu arsenal. Você pode trocar quando quiser.</li></ol><p>Seu progresso fica salvo automaticamente neste dispositivo. Recomeçar jornada devolve todos os pontos.</p><button class="primary-button" id="gotIt">Entendi, vamos!</button></div></dialog>
+  <dialog id="helpDialog"><div class="dialog-inner"><button class="dialog-close" id="closeHelp" aria-label="Fechar">×</button><div class="eyebrow">✧ GUIA DO AVENTUREIRO</div><h2>Como trilhar seu caminho</h2><ol><li><b>Escolha uma vocação</b> para explorar sua árvore de habilidades.</li><li><b>Complete missões</b> para ganhar experiência e pontos de habilidade.</li><li><b>Desbloqueie habilidades</b> seguindo as conexões e os requisitos da trilha.</li><li><b>Equipe até 3 poderes</b> no seu arsenal. Você pode trocar quando quiser.</li><li><b>Estude e pesquise</b> na oficina para combinar duas habilidades dominadas e criar uma técnica original.</li></ol><p>Seu progresso fica salvo automaticamente neste dispositivo. Recomeçar jornada devolve todos os pontos e pesquisas.</p><button class="primary-button" id="gotIt">Entendi, vamos!</button></div></dialog>
   <script src="game.js"></script>
 </body>
 </html>
