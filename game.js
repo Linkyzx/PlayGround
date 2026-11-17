@@ -121,3 +121,29 @@ $('resetResearchButton').addEventListener('click',()=>{if(!confirm('Resetar pesq
 $('resetButton').addEventListener('click',()=>{if(!confirm('Recomeçar a jornada? Todo o progresso, habilidades e missões serão reiniciados.'))return;state={...initialState,unlocked:[],equipped:[],completed:[],studied:[],customSkills:[]};selectedSkill=null;save();render();showToast('Uma nova lenda começa agora.');});
 const help=$('helpDialog');$('helpButton').addEventListener('click',()=>help.showModal());$('closeHelp').addEventListener('click',()=>help.close());$('gotIt').addEventListener('click',()=>help.close());$('profileButton').addEventListener('click',()=>showToast('Você é quem escreve esta lenda.'));
 render();
+// Presets interativos inspirados em sistemas de animes/manhwas
+const themes={
+  arvandor:{name:'Arvandor',label:'Fantasia original',icon:'✦',swatch:'#d5b875',colors:{bg:'#101510',panel:'#171d18',panel2:'#1b231d',line:'#2b352d',text:'#e9eadf',muted:'#8e9a8f',gold:'#d5b875',gold2:'#f0d99d',glow:'#d5b87522'}},
+  slime:{name:'Tempestade de Slime',label:'Evolução monstruosa',icon:'◉',swatch:'#65b9a7',colors:{bg:'#071411',panel:'#10201c',panel2:'#153029',line:'#27594e',text:'#e7f5ef',muted:'#9bb5ad',gold:'#63bda5',gold2:'#b1ead4',glow:'#55d9b522'}},
+  shield:{name:'Herói do Escudo',label:'Fortaleza e defesa',icon:'⬟',swatch:'#4f8dca',colors:{bg:'#09111a',panel:'#101b26',panel2:'#172735',line:'#29455e',text:'#edf3f7',muted:'#96aabd',gold:'#69a6d8',gold2:'#add6ef',glow:'#5ca5e522'}},
+  sword:{name:'Espada do Mundo',label:'Ritmo de aventura',icon:'⚔',swatch:'#8eb35d',colors:{bg:'#10130d',panel:'#1a2115',panel2:'#222b1b',line:'#3d4a32',text:'#edf0e6',muted:'#a4ad9b',gold:'#b1c978',gold2:'#d9e9a7',glow:'#a8c95e22'}},
+  demon:{name:'Caçador de Demônios',label:'Respiração e espírito',icon:'◈',swatch:'#5f9d89',colors:{bg:'#10090e',panel:'#1a1017',panel2:'#26151f',line:'#4a2938',text:'#f4e9ec',muted:'#b49aa4',gold:'#d9a05e',gold2:'#f2cb83',glow:'#bf5f7322'}},
+  throne:{name:'Trono Sombrio',label:'Sistema de monarca',icon:'♛',swatch:'#7b6fc0',colors:{bg:'#0d0c16',panel:'#171529',panel2:'#211e38',line:'#3b365d',text:'#efedfa',muted:'#aaa6bf',gold:'#9b91d8',gold2:'#ccc4ff',glow:'#7569cf22'}}
+};
+let themeId=localStorage.getItem('arvandor-theme')||'arvandor';
+function applyTheme(id){
+  const theme=themes[id]||themes.arvandor;themeId=id in themes?id:'arvandor';
+  const root=document.documentElement;
+  Object.entries(theme.colors).forEach(([key,value])=>root.style.setProperty('--'+key,value));
+  root.dataset.theme=themeId;$('themeLabel').textContent=theme.name;$('themeIcon').textContent=theme.icon;
+  localStorage.setItem('arvandor-theme',themeId);
+  document.querySelectorAll('.theme-option').forEach(el=>{el.classList.toggle('active',el.dataset.theme===themeId);el.querySelector('.theme-check').textContent=el.dataset.theme===themeId?'✓':''});
+}
+function renderThemeMenu(){
+  $('themeMenu').innerHTML=Object.entries(themes).map(([id,t])=>`<button class="theme-option ${id===themeId?'active':''}" role="menuitem" data-theme="${id}"><span class="theme-swatch" style="background:${t.swatch}">${t.icon}</span><span class="theme-copy"><b>${t.name}</b><small>${t.label}</small></span><span class="theme-check">${id===themeId?'✓':''}</span></button>`).join('');
+  document.querySelectorAll('.theme-option').forEach(btn=>btn.addEventListener('click',()=>{applyTheme(btn.dataset.theme);$('themeMenu').classList.remove('open');$('themeTrigger').setAttribute('aria-expanded','false');showToast(`Tema ativado: ${themes[themeId].name}`);}));
+}
+$('themeTrigger').addEventListener('click',e=>{e.stopPropagation();const open=$('themeMenu').classList.toggle('open');$('themeTrigger').setAttribute('aria-expanded',String(open));});
+document.addEventListener('click',e=>{if(!e.target.closest('.top-actions')){$('themeMenu').classList.remove('open');$('themeTrigger').setAttribute('aria-expanded','false');}});
+document.addEventListener('pointermove',e=>{document.documentElement.style.setProperty('--mx',`${e.clientX}px`);document.documentElement.style.setProperty('--my',`${e.clientY}px`);});
+renderThemeMenu();applyTheme(themeId);
