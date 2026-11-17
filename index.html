@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101510" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E" />
+  <title>Crônicas de Arvandor — Árvore de habilidades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Marcellus&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Crônicas de Arvandor, início">
+        <span class="brand-mark">✦</span><span>ARVANDOR <small>CRÔNICAS DO REINO</small></span>
+      </a>
+      <div class="top-center"><span class="season-dot"></span> TEMPORADA I <i>•</i> O DESPERTAR</div>
+      <button class="profile-button" id="profileButton"><span class="avatar">✦</span><span class="profile-copy"><b>Andarilho</b><small>Viajante do reino</small></span><span class="chevron">⌄</span></button>
+    </header>
+
+    <main>
+      <section class="hero-row">
+        <div class="hero-copy">
+          <div class="eyebrow"><span>✧</span> SEU DESTINO, SUA ESCOLHA</div>
+          <h1>Árvore de habilidades</h1>
+          <p>Forje seu próprio caminho. Cada escolha molda a lenda que você vai contar.</p>
+        </div>
+        <div class="hero-actions"><button class="quiet-button" id="resetButton">↺ <span>Recomeçar jornada</span></button><button class="help-button" id="helpButton" aria-label="Como jogar">?</button></div>
+      </section>
+
+      <section class="player-strip">
+        <div class="player-identity"><div class="portrait"><span>⚔</span><i></i></div><div><div class="player-name">Aventureiro <span class="level-badge" id="levelBadge">NV. 1</span></div><div class="player-subtitle">Caminhante das Terras Livres</div></div></div>
+        <div class="xp-block"><div class="xp-label"><span>EXPERIÊNCIA</span><b id="xpText">0 / 100 XP</b></div><div class="xp-track"><span id="xpBar"></span></div><div class="xp-foot">Próximo nível: <b id="nextLevel">100 XP</b></div></div>
+        <div class="points-block"><span class="point-emblem">✧</span><div><b id="pointsCount">2</b><small>PONTOS DE<br>HABILIDADE</small></div><span class="point-glow"></span></div>
+      </section>
+
+      <div class="workspace">
+        <aside class="left-panel panel">
+          <div class="panel-kicker">CAMINHOS DO HERÓI</div>
+          <h2>Escolha sua vocação</h2>
+          <p class="panel-intro">Cada caminho guarda poderes únicos. Misture estilos e crie sua própria lenda.</p>
+          <div class="path-list" id="pathList"></div>
+          <div class="legend-card"><div class="legend-icon">◈</div><div><b>Seu caminho é único</b><p>Gaste pontos para desbloquear habilidades. Algumas exigem que você aprenda seus fundamentos primeiro.</p></div></div>
+        </aside>
+
+        <section class="tree-panel panel" aria-label="Árvore de habilidades">
+          <div class="tree-header"><div><div class="panel-kicker">PROGRESSÃO DE HABILIDADES</div><h2 id="treeTitle">Trilha do guerreiro</h2></div><div class="tree-zoom"><button id="zoomOut" aria-label="Diminuir zoom">−</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="Aumentar zoom">+</button></div></div>
+          <div class="tree-viewport" id="treeViewport">
+            <div class="tree-world" id="treeWorld">
+              <svg class="connections" id="connections" viewBox="0 0 760 590" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div id="nodesLayer"></div>
+              <div class="tree-caption"><span class="caption-star">✧</span><div><b>O primeiro passo é seu</b><small>Escolha uma habilidade para conhecer seu poder</small></div></div>
+            </div>
+          </div>
+          <div class="tree-footer"><span><i class="legend-dot available"></i> Disponível</span><span><i class="legend-dot unlocked"></i> Desbloqueada</span><span><i class="legend-dot locked"></i> Bloqueada</span><span class="scroll-hint">Role para explorar a árvore <span>↓</span></span></div>
+        </section>
+
+        <aside class="right-panel panel">
+          <div class="panel-kicker">DETALHES DA HABILIDADE</div>
+          <div class="detail-empty" id="detailEmpty"><div class="empty-rune">✧</div><h3>Um mundo de possibilidades</h3><p>Selecione uma habilidade na árvore para descobrir seus efeitos e decidir se ela fará parte da sua jornada.</p><div class="empty-rule"><span>✦</span></div><small>SEU DESTINO AGUARDA</small></div>
+          <div class="skill-detail hidden" id="skillDetail"></div>
+          <div class="divider"></div>
+          <div class="loadout-heading"><div><div class="panel-kicker">HABILIDADES EQUIPADAS</div><h3>Seu arsenal</h3></div><span id="loadoutCount">0 / 3</span></div>
+          <div class="loadout" id="loadout"></div>
+          <div class="quick-tip"><span>☼</span><p><b>Dica do mestre</b>Complete missões para ganhar XP e pontos de habilidade.</p></div>
+        </aside>
+      </div>
+
+      <section class="quests-section panel">
+        <div class="quests-title"><div><div class="panel-kicker">TAREFAS DO AVENTUREIRO</div><h2>Missões da jornada</h2></div><span class="quest-note">Complete desafios para evoluir <span>✧</span></span></div>
+        <div class="quest-grid" id="questGrid"></div>
+      </section>
+      <footer class="footer"><span>✦</span> AS LENDAS DE ARVANDOR <i>•</i> SEU CAMINHO, SUAS REGRAS</footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="helpDialog"><div class="dialog-inner"><button class="dialog-close" id="closeHelp" aria-label="Fechar">×</button><div class="eyebrow">✧ GUIA DO AVENTUREIRO</div><h2>Como trilhar seu caminho</h2><ol><li><b>Escolha uma vocação</b> para explorar sua árvore de habilidades.</li><li><b>Complete missões</b> para ganhar experiência e pontos de habilidade.</li><li><b>Desbloqueie habilidades</b> seguindo as conexões e os requisitos da trilha.</li><li><b>Equipe até 3 poderes</b> no seu arsenal. Você pode trocar quando quiser.</li></ol><p>Seu progresso fica salvo automaticamente neste dispositivo. Recomeçar jornada devolve todos os pontos.</p><button class="primary-button" id="gotIt">Entendi, vamos!</button></div></dialog>
+  <script src="game.js"></script>
+</body>
+</html>
